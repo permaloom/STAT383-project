@@ -113,3 +113,21 @@ ggplot(proportions_by_gender, aes(x = Candidate, y = Proportion, fill = Candidat
   theme_minimal()()
 
 ggsave("overall_voting_proportions_by_gender.jpg", width = 7, height = 7, dpi = 300)
+
+proportions_overall_adjusted <- data.frame(
+  Candidate = c("Donald Trump", "Kamala Harris", "Other"),
+  Proportion = c(
+    sum(df_adjusted$vote == "Donald Trump") / nrow(df_adjusted),
+    sum(df_adjusted$vote == "Kamala Harris") / nrow(df_adjusted),
+    sum(df_adjusted$vote == "Other") / nrow(df_adjusted)
+  )
+)
+
+# Plot overall adjusted proportions
+ggplot(proportions_overall_adjusted, aes(x = Candidate, y = Proportion, fill = Candidate)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Overall Adjusted Voting Proportions", x = "Candidate", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal()()
+
+ggsave("overall_adjusted_voting_proportions.jpg", width = 7, height = 7, dpi = 300)
