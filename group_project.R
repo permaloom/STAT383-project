@@ -100,7 +100,7 @@ ggplot(proportions_overall, aes(x = Candidate, y = Proportion, fill = Candidate)
   geom_bar(stat = "identity") +
   labs(title = "Overall Voting Proportions", x = "Candidate", y = "Proportion") +
   scale_y_continuous(labels = scales::percent_format()) +
-  theme_minimal()()
+  theme_minimal()
 
 ggsave("overall_voting_proportions.jpg", width = 7, height = 7, dpi = 300)
 
@@ -110,7 +110,7 @@ ggplot(proportions_by_gender, aes(x = Candidate, y = Proportion, fill = Candidat
   facet_wrap(~ Gender) +
   labs(title = "Voting Proportions by Gender", x = "Candidate", y = "Proportion") +
   scale_y_continuous(labels = scales::percent_format()) +
-  theme_minimal()()
+  theme_minimal()
 
 ggsave("overall_voting_proportions_by_gender.jpg", width = 7, height = 7, dpi = 300)
 
@@ -128,6 +128,6 @@ ggplot(proportions_overall_adjusted, aes(x = Candidate, y = Proportion, fill = C
   geom_bar(stat = "identity") +
   labs(title = "Overall Adjusted Voting Proportions", x = "Candidate", y = "Proportion") +
   scale_y_continuous(labels = scales::percent_format()) +
-  theme_minimal()()
+  theme_minimal()
 
 ggsave("overall_adjusted_voting_proportions.jpg", width = 7, height = 7, dpi = 300)
