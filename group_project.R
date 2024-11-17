@@ -1,8 +1,8 @@
 graphics.off() # clear all previous plots
 rm(list=ls()) # clear the environment from previous codes
-cat("\014") # clear the console 
+cat("\014") # clear the consol
 
-
+library(ggplot2)
 library(readxl)
 df <- read_excel("consolidated_data.xlsx") 
 View(df)
@@ -71,3 +71,45 @@ sum(df_adjusted$gender == 0) / nrow(df_adjusted)
 sum(df_adjusted$gender == 1)
 # propotion male adjusted
 sum(df_adjusted$gender == 1) / nrow(df_adjusted)
+
+
+proportions_overall <- data.frame(
+  Candidate = c("Donald Trump", "Kamala Harris", "Other"),
+  Proportion = c(
+    sum(df$vote == "Donald Trump") / nrow(df),
+    sum(df$vote == "Kamala Harris") / nrow(df),
+    sum(df$vote == "Other") / nrow(df)
+  )
+)
+
+proportions_by_gender <- data.frame(
+  Gender = rep(c("Male", "Female"), each = 3),
+  Candidate = rep(c("Donald Trump", "Kamala Harris", "Other"), times = 2),
+  Proportion = c(
+    sum(df_males$vote == "Donald Trump") / nrow(df_males),
+    sum(df_males$vote == "Kamala Harris") / nrow(df_males),
+    sum(df_males$vote == "Other") / nrow(df_males),
+    sum(df_females$vote == "Donald Trump") / nrow(df_females),
+    sum(df_females$vote == "Kamala Harris") / nrow(df_females),
+    sum(df_females$vote == "Other") / nrow(df_females)
+  )
+)
+
+# Plot overall proportions
+ggplot(proportions_overall, aes(x = Candidate, y = Proportion, fill = Candidate)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Overall Voting Proportions", x = "Candidate", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal()()
+
+ggsave("overall_voting_proportions.jpg", width = 7, height = 7, dpi = 300)
+
+# Plot gender-based proportions
+ggplot(proportions_by_gender, aes(x = Candidate, y = Proportion, fill = Candidate)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ Gender) +
+  labs(title = "Voting Proportions by Gender", x = "Candidate", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal()()
+
+ggsave("overall_voting_proportions_by_gender.jpg", width = 7, height = 7, dpi = 300)
