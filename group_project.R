@@ -180,3 +180,5 @@ if (decision == TRUE) {
 } else {
   print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
 }
+
+p_value <- 1 - pnorm(ts_obs)
