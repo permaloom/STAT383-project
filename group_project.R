@@ -26,16 +26,29 @@ print(sum(df$vote == "Kamala Harris") / nrow(df))
 print(sum(df$vote == "Other") / nrow(df))
 
 # Subsetting a dataset
-
 df_males <- df[df$gender == 1, ]
-
 df_females <- df[df$gender == 0, ]
 
-# proportion of Donald Trump voters amongst male students
-print(sum(df_males$vote == "Donald Trump") / nrow(df_males))
+df_males_minority <- df[df$gender == 1 & df$minority == 1, ]
+df_males_non_minority <- df[df$gender == 1 & df$minority == 0, ]
 
-# proportion of Donald Trump voters amongst female students
-print(sum(df_females$vote == "Donald Trump") / nrow(df_females))
+df_females_minority <- df[df$gender == 0 & df$minority == 1, ]
+df_females_non_minority <- df[df$gender == 0 & df$minority == 0, ]
+
+# proportion of Donald Trump voters amongst male students (minority)
+print(sum(df_males_minority$vote == "Donald Trump") / nrow(df_males_minority))
+
+# proportion of Donald Trump voters amongst male students (non minority)
+print(sum(df_males_non_minority$vote == "Donald Trump")
+      / nrow(df_males_non_minority))
+
+# proportion of Donald Trump voters amongst female students (minority)
+print(sum(df_females_minority$vote == "Donald Trump")
+      / nrow(df_females_minority))
+
+# proportion of Donald Trump voters amongst female students (non minority)
+print(sum(df_females_non_minority$vote == "Donald Trump")
+      / nrow(df_females_non_minority))
 
 # proportion of woman in St. Lawrence County
 females_st_lawrence <- 0.506
@@ -52,21 +65,42 @@ females_north_country <- mean(females_st_lawrence,
                               females_hamilton,
                               females_jefferson)
 
+minority_north_country <- 0.085
+
 total_count <- nrow(df)
 
 # target number of females and males based on the state's gender ratio
-target_females <- round(total_count * 0.488) 
+target_females <- round(total_count * females_north_country)
 target_males <- total_count - target_females
+
+target_females_minority <- round(total_count *
+                                   females_north_country *
+                                   minority_north_country)
+
+target_females_non_minority <- target_females - target_females_minority
+
+target_males_minority <- round(total_count *
+                                 (1 - females_north_country) *
+                                 minority_north_country)
+
+target_males_non_minority <- target_males - target_males_minority
 
 # Resample females and males to match the target counts
 set.seed(123)
-df_females_adjusted <- df_females[sample(1:nrow(df_females),
-                                         target_females, replace = TRUE), ]
-df_males_adjusted <- df_males[sample(1:nrow(df_males),
-                                     target_males, replace = TRUE), ]
+
+df_females_minority_adjusted <- df_females_minority[sample(1:nrow(df_females_minority), target_females_minority, replace = TRUE), ]
+
+df_females_non_minority_adjusted <- df_females_non_minority[sample(1:nrow(df_females_non_minority), target_females_non_minority, replace = TRUE), ]
+
+df_males_minority_adjusted <- df_males_minority[sample(1:nrow(df_males_minority), target_males_minority, replace = TRUE), ]
+
+df_males_non_minority_adjusted <- df_males_non_minority[sample(1:nrow(df_males_non_minority), target_males_non_minority, replace = TRUE), ]
 
 # combine adjusted female and male datasets
-df_adjusted <- rbind(df_females_adjusted, df_males_adjusted)
+df_adjusted <- rbind(df_females_minority_adjusted,
+                     df_females_non_minority_adjusted,
+                     df_males_minority_adjusted,
+                    df_males_non_minority_adjusted)
 
 # female adjusted
 sum(df_adjusted$gender == 0)
@@ -147,15 +181,13 @@ ggsave("overall_adjusted_voting_proportions.jpg",
        width = 7, height = 7, dpi = 300)
 
 
-# TODO adjusting minorities
-
-
 # --- hypothesis testing ---
 
 # H_0: p <= 0.5 
 # H_A: p > 0.5
 
 p <- 0.5
+# n <- nrow(df_adjusted)
 n <- sum(df_adjusted$vote == "Donald Trump"
          | df_adjusted$vote == "Kamala Harris")
 
