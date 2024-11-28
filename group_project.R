@@ -1,9 +1,10 @@
 graphics.off() # clear all previous plots
 rm(list = ls()) # clear the environment from previous codes
-cat("\014") # clear the consol
+cat("\014") # clear the console
 
 library(ggplot2)
 library(readxl)
+
 df <- read_excel("consolidated_data.xlsx")
 View(df)
 head(df)
@@ -29,28 +30,41 @@ print(sum(df$vote == "Other") / nrow(df))
 df_males <- df[df$gender == 1, ]
 df_females <- df[df$gender == 0, ]
 
-df_males_minority <- df[df$gender == 1 & df$minority == 1, ]
-df_males_non_minority <- df[df$gender == 1 & df$minority == 0, ]
+#1 claim: male population from the survey is a good representation of the 18 to 29 year old male population of the likely voters in the U.S.
 
-df_females_minority <- df[df$gender == 0 & df$minority == 1, ]
-df_females_non_minority <- df[df$gender == 0 & df$minority == 0, ]
+# H_0: p <= 0.49 
+# H_A: p != 0.49
 
-# proportion of Donald Trump voters amongst male students (minority)
-print(sum(df_males_minority$vote == "Donald Trump") / nrow(df_males_minority))
+p_1 <- 0.49
+n_1 <- nrow(df_males)
 
-# proportion of Donald Trump voters amongst male students (non minority)
-print(sum(df_males_non_minority$vote == "Donald Trump")
-      / nrow(df_males_non_minority))
+p_hat_1 <- sum(df_males$vote == "Donald Trump") / n_1
 
-# proportion of Donald Trump voters amongst female students (minority)
-print(sum(df_females_minority$vote == "Donald Trump")
-      / nrow(df_females_minority))
+# ts = (p_hat - p)/sqrt((p * (1 - p)/n))
+# ts ~ N(0,1)
 
-# proportion of Donald Trump voters amongst female students (non minority)
-print(sum(df_females_non_minority$vote == "Donald Trump")
-      / nrow(df_females_non_minority))
+# using sample proportion
+ts_obs_1 <- (p_hat_1 - p_1) / sqrt((p_1 * (1 - p_1) / n_1))
 
-# proportion of woman in St. Lawrence County
+# alpha = 0.05
+# RR: (-inf, -1.96] ∪ [1.96, inf)
+
+c_1 <- 1.96
+
+decision_1 <- (abs(ts_obs_1) > abs(c_1))
+
+if (decision_1 == TRUE) {
+  print("Since TS_obs is in the rejection region, we reject H_0.")
+} else {
+  print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
+}
+
+p_value_1 <- 2 * (1 - pnorm(abs(ts_obs_1)))
+print(p_value_1)
+
+
+#2 claim: the adapted sample data is a good representation of voters in the north country
+
 females_st_lawrence <- 0.506
 females_franklin <- 0.475
 females_clinton <- 0.491
@@ -65,152 +79,70 @@ females_north_country <- mean(females_st_lawrence,
                               females_hamilton,
                               females_jefferson)
 
-minority_north_country <- 0.085
+n_males <- nrow(df_males)
+n_females <- nrow(df_females)
 
-total_count <- nrow(df)
+# get number actual n_females of the north country
+# n_females / (n_males + n_females) = females_north_country
+# n_females = females_north_country * (n_males + n_females) 
+# n_females = females_north_country * n_males + females_north_country * n_females
+# n_females - females_north_country * n_females = females_north_country * n_males
+# n_females * (1 - females_north_country) = females_north_country * n_males
+# n_females = (females_north_country * n_males) / (1 - females_north_country)
 
-# target number of females and males based on the state's gender ratio
-target_females <- round(total_count * females_north_country)
-target_males <- total_count - target_females
+n_females_nc <- ceiling(((females_north_country * n_males) /
+                           (1 - females_north_country)))
 
-target_females_minority <- round(total_count *
-                                   females_north_country *
-                                   minority_north_country)
-
-target_females_non_minority <- target_females - target_females_minority
-
-target_males_minority <- round(total_count *
-                                 (1 - females_north_country) *
-                                 minority_north_country)
-
-target_males_non_minority <- target_males - target_males_minority
-
-# Resample females and males to match the target counts
-set.seed(123)
-
-df_females_minority_adjusted <- df_females_minority[sample(1:nrow(df_females_minority), target_females_minority, replace = TRUE), ]
-
-df_females_non_minority_adjusted <- df_females_non_minority[sample(1:nrow(df_females_non_minority), target_females_non_minority, replace = TRUE), ]
-
-df_males_minority_adjusted <- df_males_minority[sample(1:nrow(df_males_minority), target_males_minority, replace = TRUE), ]
-
-df_males_non_minority_adjusted <- df_males_non_minority[sample(1:nrow(df_males_non_minority), target_males_non_minority, replace = TRUE), ]
-
-# combine adjusted female and male datasets
-df_adjusted <- rbind(df_females_minority_adjusted,
-                     df_females_non_minority_adjusted,
-                     df_males_minority_adjusted,
-                    df_males_non_minority_adjusted)
-
-# female adjusted
-sum(df_adjusted$gender == 0)
-# proportion female adjusted
-sum(df_adjusted$gender == 0) / nrow(df_adjusted)
-
-# male adjusted
-sum(df_adjusted$gender == 1)
-# propotion male adjusted
-sum(df_adjusted$gender == 1) / nrow(df_adjusted)
+# get the adjusting factor
+# n_females_nc = proportion_females * n_females 
+# proportion_females = n_females_nc/n_females
 
 
-proportions_overall <- data.frame(
-  Candidate = c("Donald Trump", "Kamala Harris", "Other"),
-  Proportion = c(
-    sum(df$vote == "Donald Trump") / nrow(df),
-    sum(df$vote == "Kamala Harris") / nrow(df),
-    sum(df$vote == "Other") / nrow(df)
-  )
-)
+proportion_increase_factor <- round(n_females_nc / n_females, 2)
+print(proportion_increase_factor)
 
-proportions_by_gender <- data.frame(
-  Gender = rep(c("Male", "Female"), each = 3),
-  Candidate = rep(c("Donald Trump", "Kamala Harris", "Other"), times = 2),
-  Proportion = c(
-    sum(df_males$vote == "Donald Trump") / nrow(df_males),
-    sum(df_males$vote == "Kamala Harris") / nrow(df_males),
-    sum(df_males$vote == "Other") / nrow(df_males),
-    sum(df_females$vote == "Donald Trump") / nrow(df_females),
-    sum(df_females$vote == "Kamala Harris") / nrow(df_females),
-    sum(df_females$vote == "Other") / nrow(df_females)
-  )
-)
+# source https://spectrumlocalnews.com/nys/central-ny/politics/2024/11/07/how-new-york-voted-in-the-2024-presidential-election
+result_st_lawrence <- 0.59
+result_franklin <- 0.546
+result_clinton <- 0.511
+result_essex <- 0.502
+result_hamilton <- 0.654
+result_jefferson <- 0.62
 
-# Plot overall proportions
-ggplot(proportions_overall,
-       aes(x = Candidate, y = Proportion, fill = Candidate)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Overall Voting Proportions",
-       x = "Candidate", y = "Proportion") +
-  scale_y_continuous(labels = scales::percent_format()) +
-  theme_minimal()
-
-ggsave("overall_voting_proportions.jpg", width = 7, height = 7, dpi = 300)
-
-# Plot gender-based proportions
-ggplot(proportions_by_gender,
-       aes(x = Candidate, y = Proportion, fill = Candidate)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  facet_wrap(~ Gender) +
-  labs(title = "Voting Proportions by Gender",
-       x = "Candidate", y = "Proportion") +
-  scale_y_continuous(labels = scales::percent_format()) +
-  theme_minimal()
-
-ggsave("overall_voting_proportions_by_gender.jpg", 
-       width = 7, height = 7, dpi = 300)
-
-proportions_overall_adjusted <- data.frame(
-  Candidate = c("Donald Trump", "Kamala Harris", "Other"),
-  Proportion = c(
-    sum(df_adjusted$vote == "Donald Trump") / nrow(df_adjusted),
-    sum(df_adjusted$vote == "Kamala Harris") / nrow(df_adjusted),
-    sum(df_adjusted$vote == "Other") / nrow(df_adjusted)
-  )
-)
-
-# Plot overall adjusted proportions
-ggplot(proportions_overall_adjusted,
-       aes(x = Candidate, y = Proportion, fill = Candidate)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Overall Adjusted Voting Proportions",
-       x = "Candidate", y = "Proportion") +
-  scale_y_continuous(labels = scales::percent_format()) +
-  theme_minimal()
-
-ggsave("overall_adjusted_voting_proportions.jpg",
-       width = 7, height = 7, dpi = 300)
+result_north_country <- mean(result_st_lawrence,
+                             result_franklin,
+                             result_clinton,
+                             result_essex,
+                             result_hamilton,
+                             result_jefferson)
 
 
-# --- hypothesis testing ---
+p_2 <- result_north_country
+n_2 <- ceiling(nrow(df_males) + proportion_increase_factor * nrow(df_females))
 
-# H_0: p <= 0.5 
-# H_A: p > 0.5
-
-p <- 0.5
-# n <- nrow(df_adjusted)
-n <- sum(df_adjusted$vote == "Donald Trump"
-         | df_adjusted$vote == "Kamala Harris")
-
-p_hat <- sum(df_adjusted$vote == "Donald Trump") / n
+p_hat_2 <- (sum(df_males$vote == "Donald Trump") +
+              proportion_increase_factor *
+                sum(df_females$vote == "Donald Trump")) / n_2
 
 # ts = (p_hat - p)/sqrt((p * (1 - p)/n))
 # ts ~ N(0,1)
 
 # using sample proportion
 
-ts_obs <- (p_hat - p) / sqrt((p * (1 - p) / n))
+ts_obs_2 <- (p_hat_2 - p_2) / sqrt((p_2 * (1 - p_2) / n_2))
 
 # alpha = 0.05
-# RR: [1.645, inf)
+# RR: (-inf, -1.96] union [1.96, inf)
 
-c <- 1.645
+c_2 <- 1.96
 
-decision <- (ts_obs > c)
+decision_2 <- (abs(ts_obs_2) > abs(c_2))
 
-if (decision == TRUE) {
+if (decision_2 == TRUE) {
   print("Since TS_obs is in the rejection region, we reject H_0.")
 } else {
   print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
 }
 
-p_value <- 1 - pnorm(ts_obs)
+p_value_2 <- 2 * (1 - pnorm(abs(ts_obs_2)))
+print(p_value_2)
