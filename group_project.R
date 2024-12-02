@@ -70,8 +70,9 @@ print(p_value_1)
 
 #2 claim: the sample population is a good representation of young voters in the U.S.
 
-# TODO adjust proportion_young_females_us
-proportion_young_females_us <- 0.5
+# https://www.statista.com/statistics/241488/population-of-the-us-by-sex-and-age/ 
+# approximation with 20 to 29 year old people
+proportion_young_females_us <- (10.68 + 10.84) / (11.13 + 10.68 + 11.18 + 10.84)
 
 # find the derivation for this formula in claim 4
 n_young_females <- ceiling(((proportion_young_females_us * n_males) /
@@ -79,7 +80,8 @@ n_young_females <- ceiling(((proportion_young_females_us * n_males) /
 adjusting_factor_young_females <- round(n_young_females / n_females, 2)
 
 # TODO adjust p_2
-p_2 <- 0.5
+p_2 <- 0.49 * (1 - proportion_young_females_us) +
+  0.37 * proportion_young_females_us
 n_2 <- ceiling(n_males + adjusting_factor_young_females * n_females)
 
 p_hat_2 <- (male_votes_trump + adjusting_factor_young_females *
