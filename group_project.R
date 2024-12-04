@@ -79,7 +79,6 @@ n_young_females <- ceiling(((proportion_young_females_us * n_males) /
                               (1 - proportion_young_females_us)))
 adjusting_factor_young_females <- round(n_young_females / n_females, 2)
 
-# TODO adjust p_2
 p_2 <- 0.49 * (1 - proportion_young_females_us) +
   0.37 * proportion_young_females_us
 n_2 <- ceiling(n_males + adjusting_factor_young_females * n_females)
@@ -152,7 +151,7 @@ result_north_country <- mean(c(result_st_lawrence,
 # proportion_females = n_females_nc/n_females
 
 
-#3 claim: the adapted sample data is a good representation of voters in the north country
+#3 claim: the adapted sample data is a good representation of voters in the north country of New York state
 
 n_females_nc <- ceiling(((females_north_country * n_males) /
                            (1 - females_north_country)))
@@ -196,16 +195,21 @@ parents_votes_trump <- sum(df$vote == "Donald Trump" & df$different == 0)
 male_votes_trump_including_parents <- male_votes_trump + parents_votes_trump
 female_votes_trump_including_parents <- female_votes_trump + parents_votes_trump
 
-n_females_nc_including_parents <- ceiling(((females_north_country * n_males_including_parents) /
-                           (1 - females_north_country)))
+n_females_nc_including_parents <-
+  ceiling(((females_north_country * n_males_including_parents) /
+             (1 - females_north_country)))
 
-adjusting_factor_females_nc_including_parents <- round(n_females_nc_including_parents / n_females_including_parents, 2)
+adjusting_factor_females_nc_including_parents <-
+  round(n_females_nc_including_parents / n_females_including_parents, 2)
 
 p_4 <- result_north_country
-n_4 <- ceiling(n_males_including_parents + adjusting_factor_females_nc_including_parents * n_females_including_parents)
+n_4 <- ceiling(n_males_including_parents +
+                 adjusting_factor_females_nc_including_parents *
+                   n_females_including_parents)
 
-p_hat_4 <- (male_votes_trump_including_parents + adjusting_factor_females_nc_including_parents *
-              female_votes_trump_including_parents) / n_4
+p_hat_4 <- (male_votes_trump_including_parents +
+              adjusting_factor_females_nc_including_parents *
+                female_votes_trump_including_parents) / n_4
 
 ts_obs_4 <- (p_hat_4 - p_4) / sqrt((p_4 * (1 - p_4) / n_4))
 
@@ -223,3 +227,200 @@ if (decision_4 == TRUE) {
 
 p_value_4 <- 2 * (1 - pnorm(abs(ts_obs_4)))
 print(p_value_4)
+
+
+# --- visulisations ---
+
+# overall proportions data
+proportions_overall <- data.frame(
+  Candidate = c("Donald Trump", "Kamala Harris", "Other"),
+  Proportion = c(
+    sum(df$vote == "Donald Trump") / nrow(df),
+    sum(df$vote == "Kamala Harris") / nrow(df),
+    sum(df$vote == "Other") / nrow(df)
+  )
+)
+
+ggplot(proportions_overall,
+       aes(x = Candidate, y = Proportion, fill = Candidate)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Overall Voting Proportions",
+       x = "Candidate", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal()
+
+ggsave("overall_voting_proportions.jpg", width = 8, height = 8, dpi = 300)
+
+
+#1 claim
+claim1_proportions_by_gender <- data.frame(
+  Gender = rep(c("Male", "Female"), each = 3),
+  Candidate = rep(c("Donald Trump", "Kamala Harris", "Other"), times = 2),
+  Proportion = c(
+    sum(df_males$vote == "Donald Trump") / nrow(df_males),
+    sum(df_males$vote == "Kamala Harris") / nrow(df_males),
+    sum(df_males$vote == "Other") / nrow(df_males),
+    sum(df_females$vote == "Donald Trump") / nrow(df_females),
+    sum(df_females$vote == "Kamala Harris") / nrow(df_females),
+    sum(df_females$vote == "Other") / nrow(df_females)
+  )
+)
+
+# votes for Trump
+print(sum(df_males$vote == "Donald Trump") / nrow(df_males))
+# votes for Harris
+print(sum(df_males$vote == "Kamala Harris") / nrow(df_males))
+# votes for Other
+print(sum(df_males$vote == "Other") / nrow(df_males))
+
+ggplot(claim1_proportions_by_gender,
+       aes(x = Candidate, y = Proportion, fill = Candidate)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ Gender) +
+  labs(title = "Claim 1: Voting Proportions by Gender",
+       x = "Candidate", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal()
+
+ggsave("claim1_overall_voting_proportions_by_gender.jpg",
+       width = 8, height = 8, dpi = 300)
+
+
+#2 claim
+claim2_proportions_overall_adjusted <- data.frame(
+  Candidate = c("Donald Trump", "Kamala Harris", "Other"),
+  Proportion = c(
+    (sum(df_males$vote == "Donald Trump") +
+       adjusting_factor_young_females *
+         sum(df_females$vote == "Donald Trump")) / n_2,
+    (sum(df_males$vote == "Kamala Harris") +
+       adjusting_factor_young_females *
+         sum(df_females$vote == "Kamala Harris")) / n_2,
+    (sum(df_males$vote == "Other") +
+       adjusting_factor_young_females *
+         sum(df_females$vote == "Other")) / n_2
+  )
+)
+
+# votes for Trump
+print((sum(df_males$vote == "Donald Trump") +
+         adjusting_factor_young_females *
+           sum(df_females$vote == "Donald Trump")) / n_2)
+# votes for Harris
+print((sum(df_males$vote == "Kamala Harris") +
+         adjusting_factor_young_females *
+           sum(df_females$vote == "Kamala Harris")) / n_2)
+# votes for Other
+print((sum(df_males$vote == "Other") +
+         adjusting_factor_young_females *
+           sum(df_females$vote == "Other")) / n_2)
+
+ggplot(claim2_proportions_overall_adjusted,
+       aes(x = Candidate, y = Proportion, fill = Candidate)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Claim 2: Adjusted Overall Voting Proportions",
+       x = "Candidate", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal()
+
+ggsave("claim2_overall_voting_proportions_adjusted.jpg",
+       width = 8, height = 8, dpi = 300)
+
+
+#3 claim
+claim3_proportions_overall_adjusted <- data.frame(
+  Candidate = c("Donald Trump", "Kamala Harris", "Other"),
+  Proportion = c(
+    (sum(df_males$vote == "Donald Trump") +
+       adjusting_factor_females_nc *
+         sum(df_females$vote == "Donald Trump")) / n_3,
+    (sum(df_males$vote == "Kamala Harris") +
+       adjusting_factor_females_nc *
+         sum(df_females$vote == "Kamala Harris")) / n_3,
+    (sum(df_males$vote == "Other") +
+       adjusting_factor_females_nc *
+         sum(df_females$vote == "Other")) / n_3
+  )
+)
+
+# votes for Trump
+print((sum(df_males$vote == "Donald Trump") +
+         adjusting_factor_females_nc *
+           sum(df_females$vote == "Donald Trump")) / n_3)
+# votes for Harris
+print((sum(df_males$vote == "Kamala Harris") +
+         adjusting_factor_females_nc *
+           sum(df_females$vote == "Kamala Harris")) / n_3)
+# votes for Other
+print((sum(df_males$vote == "Other") +
+         adjusting_factor_females_nc *
+           sum(df_females$vote == "Other")) / n_3)
+
+
+ggplot(claim3_proportions_overall_adjusted,
+       aes(x = Candidate, y = Proportion, fill = Candidate)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Claim 3: Adjusted Overall Voting Proportions",
+       x = "Candidate", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal()
+
+ggsave("claim3_overall_voting_proportions_adjusted.jpg",
+       width = 8, height = 8, dpi = 300)
+
+#4 claim
+male_votes_harris <- sum(df_males$vote == "Kamala Harris")
+female_votes_harris <- sum(df_females$vote == "Kamala Harris")
+
+male_votes_other <- sum(df_males$vote == "Other")
+female_votes_other <- sum(df_females$vote == "Other")
+
+parents_votes_harris <- sum(df$vote == "Kamala Harris" & df$different == 0)
+parents_votes_other <- sum(df$vote == "Other" & df$different == 0)
+
+male_votes_harris_including_parents <- male_votes_harris + parents_votes_harris
+female_votes_harris_including_parents <-
+  female_votes_harris + parents_votes_harris
+
+male_votes_other_including_parents <- male_votes_other + parents_votes_other
+female_votes_other_including_parents <- female_votes_other + parents_votes_other
+
+claim4_proportions_overall_adjusted <- data.frame(
+  Candidate = c("Donald Trump", "Kamala Harris", "Other"),
+  Proportion = c(
+    (male_votes_trump_including_parents +
+       adjusting_factor_females_nc_including_parents *
+         female_votes_trump_including_parents) / n_4,
+    (male_votes_harris_including_parents +
+       adjusting_factor_females_nc_including_parents *
+         female_votes_harris_including_parents) / n_4,
+    (male_votes_other_including_parents +
+       adjusting_factor_females_nc_including_parents *
+         female_votes_other_including_parents) / n_4
+  )
+)
+
+# votes for Trump
+print((male_votes_trump_including_parents +
+         adjusting_factor_females_nc_including_parents *
+           female_votes_trump_including_parents) / n_4)
+# votes for Harris
+print((male_votes_harris_including_parents +
+         adjusting_factor_females_nc_including_parents *
+           female_votes_harris_including_parents) / n_4)
+# votes for Other
+print((male_votes_other_including_parents +
+         adjusting_factor_females_nc_including_parents *
+           female_votes_other_including_parents) / n_4)
+
+ggplot(claim4_proportions_overall_adjusted,
+       aes(x = Candidate, y = Proportion, fill = Candidate)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Claim 4: Adjusted Overall Voting Proportions Including Parents",
+       x = "Candidate", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal()
+
+ggsave("claim4_overall_voting_proportions_adjusted.jpg",
+       width = 8, height = 8, dpi = 300)
+
