@@ -114,12 +114,12 @@ females_essex <- 0.487
 females_hamilton <- 0.493
 females_jefferson <- 0.473
 
-females_north_country <- mean(females_st_lawrence,
-                              females_franklin,
-                              females_clinton,
-                              females_essex,
-                              females_hamilton,
-                              females_jefferson)
+females_north_country <- mean(c(females_st_lawrence,
+                                females_franklin,
+                                females_clinton,
+                                females_essex,
+                                females_hamilton,
+                                females_jefferson))
 
 # source https://spectrumlocalnews.com/nys/central-ny/politics/2024/11/07/how-new-york-voted-in-the-2024-presidential-election
 result_st_lawrence <- 0.59
@@ -129,12 +129,12 @@ result_essex <- 0.502
 result_hamilton <- 0.654
 result_jefferson <- 0.62
 
-result_north_country <- mean(result_st_lawrence,
-                             result_franklin,
-                             result_clinton,
-                             result_essex,
-                             result_hamilton,
-                             result_jefferson)
+result_north_country <- mean(c(result_st_lawrence,
+                               result_franklin,
+                               result_clinton,
+                               result_essex,
+                               result_hamilton,
+                               result_jefferson))
 
 
 # derivation for adjusted number of females and corresponding adjusting factor
