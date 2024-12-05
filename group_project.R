@@ -36,6 +36,8 @@ n_females <- nrow(df_females)
 male_votes_trump <- sum(df_males$vote == "Donald Trump")
 female_votes_trump <- sum(df_females$vote == "Donald Trump")
 
+alpha <- 0.05
+
 #1 claim: male population from the survey is a good representation of the 18 to 29 year old male population of the likely voters in the U.S.
 
 # H_0: p <= 0.49 
@@ -55,7 +57,7 @@ ts_obs_1 <- (p_hat_1 - p_1) / sqrt((p_1 * (1 - p_1) / n_1))
 # alpha = 0.05
 # RR: (-inf, -1.96] ∪ [1.96, inf)
 
-c_1 <- 1.96
+c_1 <- qt(0.5 * alpha, df = n_1 - 1)
 decision_1 <- (abs(ts_obs_1) > abs(c_1))
 
 if (decision_1 == TRUE) {
@@ -64,7 +66,7 @@ if (decision_1 == TRUE) {
   print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
 }
 
-p_value_1 <- 2 * (1 - pnorm(abs(ts_obs_1)))
+p_value_1 <- 2 * pt(abs(ts_obs_1), df = n_1 - 1, lower.tail = FALSE)
 print(p_value_1)
 
 
@@ -91,7 +93,7 @@ ts_obs_2 <- (p_hat_2 - p_2) / sqrt((p_2 * (1 - p_2) / n_2))
 # alpha = 0.05
 # RR: (-inf, -1.96] ∪ [1.96, inf)
 
-c_2 <- 1.96
+c_2 <- qt(0.5 * alpha, df = n_2 - 1)
 decision_2 <- (abs(ts_obs_2) > abs(c_2))
 
 if (decision_2 == TRUE) {
@@ -100,7 +102,7 @@ if (decision_2 == TRUE) {
   print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
 }
 
-p_value_2 <- 2 * (1 - pnorm(abs(ts_obs_2)))
+p_value_2 <- 2 * pt(abs(ts_obs_2), df = n_2 - 1, lower.tail = FALSE)
 print(p_value_2)
 
 
@@ -169,7 +171,7 @@ ts_obs_3 <- (p_hat_3 - p_3) / sqrt((p_3 * (1 - p_3) / n_3))
 # alpha = 0.05
 # RR: (-inf, -1.96] union [1.96, inf)
 
-c_3 <- 1.96
+c_3 <- qt(0.5 * alpha, df = n_3 - 1)
 decision_3 <- (abs(ts_obs_3) > abs(c_3))
 
 if (decision_3 == TRUE) {
@@ -178,7 +180,7 @@ if (decision_3 == TRUE) {
   print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
 }
 
-p_value_3 <- 2 * (1 - pnorm(abs(ts_obs_3)))
+p_value_3 <- 2 * pt(abs(ts_obs_3), df = n_3 - 1, lower.tail = FALSE)
 print(p_value_3)
 
 
@@ -195,20 +197,20 @@ parents_votes_trump <- sum(df$vote == "Donald Trump" & df$different == 0)
 male_votes_trump_including_parents <- male_votes_trump + parents_votes_trump
 female_votes_trump_including_parents <- female_votes_trump + parents_votes_trump
 
-n_females_nc_including_parents <-
-  ceiling(((females_north_country * n_males_including_parents) /
-             (1 - females_north_country)))
+# n_females_nc_including_parents <-
+#   ceiling(((females_north_country * n_males_including_parents) /
+#              (1 - females_north_country)))
 
-adjusting_factor_females_nc_including_parents <-
-  round(n_females_nc_including_parents / n_females_including_parents, 2)
+# adjusting_factor_females_nc_including_parents <-
+#   round(n_females_nc_including_parents / n_females_including_parents, 2)
 
 p_4 <- result_north_country
 n_4 <- ceiling(n_males_including_parents +
-                 adjusting_factor_females_nc_including_parents *
+                 adjusting_factor_females_nc *
                    n_females_including_parents)
 
 p_hat_4 <- (male_votes_trump_including_parents +
-              adjusting_factor_females_nc_including_parents *
+              adjusting_factor_females_nc *
                 female_votes_trump_including_parents) / n_4
 
 ts_obs_4 <- (p_hat_4 - p_4) / sqrt((p_4 * (1 - p_4) / n_4))
@@ -216,7 +218,7 @@ ts_obs_4 <- (p_hat_4 - p_4) / sqrt((p_4 * (1 - p_4) / n_4))
 # alpha = 0.05
 # RR: (-inf, -1.96] union [1.96, inf)
 
-c_4 <- 1.96
+c_4 <- qt(0.5 * alpha, df = n_4 - 1)
 decision_4 <- (abs(ts_obs_4) > abs(c_4))
 
 if (decision_4 == TRUE) {
@@ -225,7 +227,7 @@ if (decision_4 == TRUE) {
   print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
 }
 
-p_value_4 <- 2 * (1 - pnorm(abs(ts_obs_4)))
+p_value_4 <- 2 * pt(abs(ts_obs_4), df = n_4 - 1, lower.tail = FALSE)
 print(p_value_4)
 
 
@@ -389,28 +391,28 @@ claim4_proportions_overall_adjusted <- data.frame(
   Candidate = c("Donald Trump", "Kamala Harris", "Other"),
   Proportion = c(
     (male_votes_trump_including_parents +
-       adjusting_factor_females_nc_including_parents *
+       adjusting_factor_females_nc *
          female_votes_trump_including_parents) / n_4,
     (male_votes_harris_including_parents +
-       adjusting_factor_females_nc_including_parents *
+       adjusting_factor_females_nc *
          female_votes_harris_including_parents) / n_4,
     (male_votes_other_including_parents +
-       adjusting_factor_females_nc_including_parents *
+       adjusting_factor_females_nc *
          female_votes_other_including_parents) / n_4
   )
 )
 
 # votes for Trump
 print((male_votes_trump_including_parents +
-         adjusting_factor_females_nc_including_parents *
+         adjusting_factor_females_nc *
            female_votes_trump_including_parents) / n_4)
 # votes for Harris
 print((male_votes_harris_including_parents +
-         adjusting_factor_females_nc_including_parents *
+         adjusting_factor_females_nc *
            female_votes_harris_including_parents) / n_4)
 # votes for Other
 print((male_votes_other_including_parents +
-         adjusting_factor_females_nc_including_parents *
+         adjusting_factor_females_nc *
            female_votes_other_including_parents) / n_4)
 
 ggplot(claim4_proportions_overall_adjusted,
