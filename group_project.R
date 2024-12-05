@@ -36,8 +36,6 @@ n_females <- nrow(df_females)
 male_votes_trump <- sum(df_males$vote == "Donald Trump")
 female_votes_trump <- sum(df_females$vote == "Donald Trump")
 
-alpha <- 0.05
-
 #1 claim: male population from the survey is a good representation of the 18 to 29 year old male population of the likely voters in the U.S.
 
 # H_0: p <= 0.49 
@@ -53,11 +51,7 @@ p_hat_1 <- male_votes_trump / n_1
 
 # using sample proportion
 ts_obs_1 <- (p_hat_1 - p_1) / sqrt((p_1 * (1 - p_1) / n_1))
-
-# alpha = 0.05
-# RR: (-inf, -1.96] ∪ [1.96, inf)
-
-c_1 <- qt(0.5 * alpha, df = n_1 - 1)
+c_1 <- 1.96
 decision_1 <- (abs(ts_obs_1) > abs(c_1))
 
 if (decision_1 == TRUE) {
@@ -66,8 +60,9 @@ if (decision_1 == TRUE) {
   print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
 }
 
-p_value_1 <- 2 * pt(abs(ts_obs_1), df = n_1 - 1, lower.tail = FALSE)
+p_value_1 <- 2 * (1 - pnorm(abs(ts_obs_1)))
 print(p_value_1)
+
 
 
 #2 claim: the sample population is a good representation of young voters in the U.S.
@@ -89,11 +84,7 @@ p_hat_2 <- (male_votes_trump + adjusting_factor_young_females *
               female_votes_trump) / n_2
 
 ts_obs_2 <- (p_hat_2 - p_2) / sqrt((p_2 * (1 - p_2) / n_2))
-
-# alpha = 0.05
-# RR: (-inf, -1.96] ∪ [1.96, inf)
-
-c_2 <- qt(0.5 * alpha, df = n_2 - 1)
+c_2 <- 1.96
 decision_2 <- (abs(ts_obs_2) > abs(c_2))
 
 if (decision_2 == TRUE) {
@@ -102,8 +93,9 @@ if (decision_2 == TRUE) {
   print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
 }
 
-p_value_2 <- 2 * pt(abs(ts_obs_2), df = n_2 - 1, lower.tail = FALSE)
+p_value_2 <- 2 * (1 - pnorm(abs(ts_obs_2)))
 print(p_value_2)
+
 
 
 # ----- North Country - New York State -----
@@ -167,11 +159,7 @@ p_hat_3 <- (male_votes_trump + adjusting_factor_females_nc *
               female_votes_trump) / n_3
 
 ts_obs_3 <- (p_hat_3 - p_3) / sqrt((p_3 * (1 - p_3) / n_3))
-
-# alpha = 0.05
-# RR: (-inf, -1.96] union [1.96, inf)
-
-c_3 <- qt(0.5 * alpha, df = n_3 - 1)
+c_3 <- 1.96
 decision_3 <- (abs(ts_obs_3) > abs(c_3))
 
 if (decision_3 == TRUE) {
@@ -180,7 +168,7 @@ if (decision_3 == TRUE) {
   print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
 }
 
-p_value_3 <- 2 * pt(abs(ts_obs_3), df = n_3 - 1, lower.tail = FALSE)
+p_value_3 <- 2 * (1 - pnorm(abs(ts_obs_3)))
 print(p_value_3)
 
 
@@ -214,11 +202,7 @@ p_hat_4 <- (male_votes_trump_including_parents +
                 female_votes_trump_including_parents) / n_4
 
 ts_obs_4 <- (p_hat_4 - p_4) / sqrt((p_4 * (1 - p_4) / n_4))
-
-# alpha = 0.05
-# RR: (-inf, -1.96] union [1.96, inf)
-
-c_4 <- qt(0.5 * alpha, df = n_4 - 1)
+c_4 <- 1.96
 decision_4 <- (abs(ts_obs_4) > abs(c_4))
 
 if (decision_4 == TRUE) {
@@ -227,8 +211,9 @@ if (decision_4 == TRUE) {
   print("Since TS_obs is not in the rejection region, we fail to reject H_0.")
 }
 
-p_value_4 <- 2 * pt(abs(ts_obs_4), df = n_4 - 1, lower.tail = FALSE)
+p_value_4 <- 2 * (1 - pnorm(abs(ts_obs_4)))
 print(p_value_4)
+
 
 
 # --- visulisations ---
